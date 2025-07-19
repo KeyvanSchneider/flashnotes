@@ -112,7 +112,38 @@ export function NoteEditor() {
   };
 
   const execCommand = (command: string, value?: string) => {
-    if (command === 'insertUnorderedList' || command === 'insertOrderedList') {
+    if (command === 'justifyLeft' || command === 'justifyCenter' || command === 'justifyRight') {
+      // Utiliser une approche moderne pour l'alignement
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        let element = range.commonAncestorContainer;
+        
+        // Trouver l'élément parent approprié
+        if (element.nodeType === Node.TEXT_NODE) {
+          element = element.parentElement;
+        }
+        
+        // Appliquer l'alignement
+        if (element && element instanceof HTMLElement) {
+          // Supprimer les anciens styles d'alignement
+          element.style.textAlign = '';
+          
+          // Appliquer le nouveau style
+          switch (command) {
+            case 'justifyLeft':
+              element.style.textAlign = 'left';
+              break;
+            case 'justifyCenter':
+              element.style.textAlign = 'center';
+              break;
+            case 'justifyRight':
+              element.style.textAlign = 'right';
+              break;
+          }
+        }
+      }
+    } else if (command === 'insertUnorderedList' || command === 'insertOrderedList') {
       // Utiliser une approche moderne pour les listes
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
