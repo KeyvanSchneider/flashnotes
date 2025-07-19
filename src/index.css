@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.image-container {
+  position: relative;
+  display: block;
+  margin: 20px auto;
+  text-align: center;
+  max-width: 100%;
+}
+
+.resizable-image {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+  min-width: 100px;
+  min-height: 100px;
+  user-select: none;
+  pointer-events: auto;
+}
+
+.resize-handle {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  width: 15px;
+  height: 15px;
+  background: #3b82f6;
+  cursor: nw-resize;
+  opacity: 0.7;
+  border-radius: 0 0 3px 0;
+  z-index: 10 !important;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.image-container:hover .resize-handle {
+  opacity: 1 !important;
+}
+
+.resize-handle:hover {
+  opacity: 1 !important;
+  background: #1d4ed8 !important;
+}
+
+.image-container.resizing .resize-handle {
+  opacity: 1 !important;
+  background: #1d4ed8 !important;
+}
+
+/* S'assurer que les images gardent leurs styles même avec les styles de retour à la ligne */
+.image-container,
+.image-container *,
+.resizable-image {
+  word-wrap: normal !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  white-space: normal !important;
+}
+
+/* Forcer le retour à la ligne automatique dans l'éditeur */
+[contenteditable="true"] {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-all !important;
+  white-space: pre-wrap !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+}
+
+/* S'assurer que tous les éléments dans l'éditeur respectent la largeur */
+[contenteditable="true"] * {
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-all !important;
+  white-space: pre-wrap !important;
+  box-sizing: border-box !important;
+}
+
+/* Styles spécifiques pour les éléments problématiques */
+[contenteditable="true"] p,
+[contenteditable="true"] div,
+[contenteditable="true"] span,
+[contenteditable="true"] strong,
+[contenteditable="true"] em,
+[contenteditable="true"] b,
+[contenteditable="true"] i {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-all !important;
+  max-width: 100% !important;
+  display: inline !important;
+}

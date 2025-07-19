@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Styles pour les conteneurs d'images redimensionnables */
+.image-container {
+  position: relative;
+  display: block;
+  margin: 20px auto;
+  border: 2px dashed transparent;
+  transition: border-color 0.2s ease;
+  text-align: center;
+  max-width: 100%;
+}
+
+.image-container:hover {
+  border-color: #3b82f6;
+}
+
+.image-container.resizing {
+  border-color: #1d4ed8;
+}
+
+.resizable-image {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+  min-width: 100px;
+  min-height: 100px;
+  user-select: none;
+  pointer-events: auto;
+}
+
+.resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background: #3b82f6;
+  cursor: nw-resize;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 2px 0 0 0;
+  z-index: 10;
+}
+
+.resize-handle::before {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-bottom: 8px solid white;
+}
+
+.image-container:hover .resize-handle {
+  opacity: 0.8;
+}
+
+.resize-handle:hover {
+  opacity: 1 !important;
+  background: #1d4ed8;
+}
+
+.image-container.resizing .resize-handle {
+  opacity: 1;
+  background: #1d4ed8;
+}
+
+/* Améliorer l'édition autour des images */
+.image-container + div {
+  min-height: 1em;
+}
+
+.image-container::before,
+.image-container::after {
+  content: '';
+  display: block;
+  height: 1px;
+  width: 100%;
+}
