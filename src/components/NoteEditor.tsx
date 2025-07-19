@@ -176,60 +176,63 @@ export function NoteEditor() {
 
   const handleAlignment = (alignment: 'left' | 'center' | 'right') => {
     if (!editorRef.current) return;
-    
+
+    // Focus sur l'éditeur
+    editorRef.current.focus();
+
     const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
-    
-    const range = selection.getRangeAt(0);
-    let container = range.commonAncestorContainer;
-    
-    // Si c'est un nœud texte, remonter au parent
-    if (container.nodeType === Node.TEXT_NODE) {
-      container = container.parentNode!;
-    }
-    
-    // Trouver l'élément block le plus proche
-    let blockElement = container as HTMLElement;
-    while (blockElement && blockElement !== editorRef.current) {
-      const style = window.getComputedStyle(blockElement);
-      if (style.display === 'block' || style.display === 'list-item' || 
-          blockElement.tagName === 'DIV' || blockElement.tagName === 'P' ||
-          blockElement.tagName.match(/^H[1-6]$/)) {
-        break;
-      }
-      blockElement = blockElement.parentElement!;
-    }
-    
-    // Si aucun élément block trouvé, créer un div
-    if (!blockElement || blockElement === editorRef.current) {
-      const div = document.createElement('div');
-      
-      try {
-        range.surroundContents(div);
-        blockElement = div;
-      } catch (e) {
-        // Si surroundContents échoue, extraire le contenu et l'envelopper
-        const contents = range.extractContents();
-        div.appendChild(contents);
-        range.insertNode(div);
-        blockElement = div;
-      }
-    }
-    
-    // Appliquer l'alignement
-    if (blockElement) {
-      blockElement.style.textAlign = alignment;
-      
-      // Repositionner le curseur
-      const newRange = document.createRange();
-      newRange.selectNodeContents(blockElement);
-      newRange.collapse(false);
+    if (!selection || selection.rangeCount === 0) {
+      // Si pas de sélection, sélectionner tout le contenu
+      const range = document.createRange();
+      range.selectNodeContents(editorRef.current);
       selection.removeAllRanges();
-      selection.addRange(newRange);
+      selection.addRange(range);
     }
+
+    const range = selection.getRangeAt(0);
     
-    // Sauvegarder
-    handleContentChange();
+    // Créer un div avec l'alignement souhaité
+    const alignedDiv = document.createElement('div');
+    alignedDiv.style.textAlign = alignment;
+    alignedDiv.style.width = '100%';
+    alignedDiv.style.margin = '0';
+    alignedDiv.style.padding = '0';
+
+    try {
+      // Si on a une sélection, l'envelopper dans le div
+      if (!range.collapsed) {
+        const contents = range.extractContents();
+        alignedDiv.appendChild(contents);
+        range.insertNode(alignedDiv);
+      } else {
+        // Si pas de sélection, insérer un div vide avec un espace
+        alignedDiv.innerHTML = '&nbsp;';
+        range.insertNode(alignedDiv);
+        
+        // Positionner le curseur dans le div
+        const newRange = document.createRange();
+        newRange.setStart(alignedDiv, 0);
+        newRange.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'alignement:', error);
+      
+      // Fallback: utiliser execCommand
+      const commands = {
+        left: 'justifyLeft',
+        center: 'justifyCenter',
+        right: 'justifyRight'
+      };
+      
+      document.execCommand(commands[alignment], false);
+    }
+
+    // Sauvegarder après un court délai
+    setTimeout(() => {
+      handleContentChange();
+    }, 100);
   };
 
   const handleTextSelection = () => {
