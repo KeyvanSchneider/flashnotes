@@ -175,31 +175,61 @@ export function NoteEditor() {
   };
 
   const handleAlignment = (alignment: 'left' | 'center' | 'right') => {
-    let command = '';
-    switch (alignment) {
-      case 'left':
-        command = 'justifyLeft';
-        break;
-      case 'center':
-        command = 'justifyCenter';
-        break;
-      case 'right':
-        command = 'justifyRight';
-        break;
+    if (!editorRef.current) return;
+    
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    
+    const range = selection.getRangeAt(0);
+    let container = range.commonAncestorContainer;
+    
+    // Si c'est un nœud texte, remonter au parent
+    if (container.nodeType === Node.TEXT_NODE) {
+      container = container.parentNode!;
     }
     
-    // S'assurer que l'éditeur a le focus
-    if (editorRef.current) {
-      editorRef.current.focus();
+    // Trouver l'élément block le plus proche
+    let blockElement = container as HTMLElement;
+    while (blockElement && blockElement !== editorRef.current) {
+      const style = window.getComputedStyle(blockElement);
+      if (style.display === 'block' || style.display === 'list-item' || 
+          blockElement.tagName === 'DIV' || blockElement.tagName === 'P' ||
+          blockElement.tagName.match(/^H[1-6]$/)) {
+        break;
+      }
+      blockElement = blockElement.parentElement!;
     }
     
-    // Exécuter la commande d'alignement
-    document.execCommand(command, false);
+    // Si aucun élément block trouvé, créer un div
+    if (!blockElement || blockElement === editorRef.current) {
+      const div = document.createElement('div');
+      
+      try {
+        range.surroundContents(div);
+        blockElement = div;
+      } catch (e) {
+        // Si surroundContents échoue, extraire le contenu et l'envelopper
+        const contents = range.extractContents();
+        div.appendChild(contents);
+        range.insertNode(div);
+        blockElement = div;
+      }
+    }
     
-    // Sauvegarder les changements
-    setTimeout(() => {
-      handleContentChange();
-    }, 100);
+    // Appliquer l'alignement
+    if (blockElement) {
+      blockElement.style.textAlign = alignment;
+      
+      // Repositionner le curseur
+      const newRange = document.createRange();
+      newRange.selectNodeContents(blockElement);
+      newRange.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(newRange);
+    }
+    
+    // Sauvegarder
+    handleContentChange();
   };
 
   const handleTextSelection = () => {
