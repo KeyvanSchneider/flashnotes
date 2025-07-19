@@ -112,38 +112,7 @@ export function NoteEditor() {
   };
 
   const execCommand = (command: string, value?: string) => {
-    if (command === 'justifyLeft' || command === 'justifyCenter' || command === 'justifyRight') {
-      // Utiliser une approche moderne pour l'alignement
-      const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        let element = range.commonAncestorContainer;
-        
-        // Trouver l'élément parent approprié
-        if (element.nodeType === Node.TEXT_NODE) {
-          element = element.parentElement;
-        }
-        
-        // Appliquer l'alignement
-        if (element && element instanceof HTMLElement) {
-          // Supprimer les anciens styles d'alignement
-          element.style.textAlign = '';
-          
-          // Appliquer le nouveau style
-          switch (command) {
-            case 'justifyLeft':
-              element.style.textAlign = 'left';
-              break;
-            case 'justifyCenter':
-              element.style.textAlign = 'center';
-              break;
-            case 'justifyRight':
-              element.style.textAlign = 'right';
-              break;
-          }
-        }
-      }
-    } else if (command === 'insertUnorderedList' || command === 'insertOrderedList') {
+    if (command === 'insertUnorderedList' || command === 'insertOrderedList') {
       // Utiliser une approche moderne pour les listes
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
@@ -175,6 +144,70 @@ export function NoteEditor() {
       editorRef.current.focus();
     }
     updateActiveFormats();
+  };
+
+  const applyAlignment = (alignment: 'left' | 'center' | 'right') => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    // Sauvegarder la sélection
+    const range = selection.getRangeAt(0);
+    
+    // Trouver l'élément conteneur approprié
+    let container = range.commonAncestorContainer;
+    
+    // Si c'est un nœud texte, prendre son parent
+    if (container.nodeType === Node.TEXT_NODE) {
+      container = container.parentNode;
+    }
+    
+    // Remonter jusqu'à trouver un élément block ou l'éditeur
+    while (container && container !== editorRef.current) {
+      if (container instanceof HTMLElement) {
+        const style = window.getComputedStyle(container);
+        if (style.display === 'block' || style.display === 'list-item' || 
+            container.tagName === 'DIV' || container.tagName === 'P' || 
+            container.tagName === 'H1' || container.tagName === 'H2' || 
+            container.tagName === 'H3' || container.tagName === 'H4' || 
+            container.tagName === 'H5' || container.tagName === 'H6') {
+          break;
+        }
+      }
+      container = container.parentNode;
+    }
+    
+    // Si on n'a pas trouvé d'élément approprié, créer un div
+    if (!container || container === editorRef.current) {
+      const div = document.createElement('div');
+      
+      try {
+        range.surroundContents(div);
+        container = div;
+      } catch (e) {
+        // Si surroundContents échoue, utiliser une autre approche
+        const contents = range.extractContents();
+        div.appendChild(contents);
+        range.insertNode(div);
+        container = div;
+      }
+    }
+    
+    // Appliquer l'alignement
+    if (container instanceof HTMLElement) {
+      container.style.textAlign = alignment;
+    }
+    
+    // Restaurer la sélection
+    selection.removeAllRanges();
+    selection.addRange(range);
+    
+    // Déclencher la sauvegarde
+    handleContentChange();
+    
+    // Focus sur l'éditeur
+    if (editorRef.current) {
+      editorRef.current.focus();
+    }
   };
 
   const updateActiveFormats = () => {
@@ -704,21 +737,21 @@ export function NoteEditor() {
           <div className="w-px h-6 bg-gray-300 mx-2" />
 
           <button
-            onClick={() => execCommand('justifyLeft')}
+            onClick={() => applyAlignment('left')}
             className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
             title="Aligner à gauche"
           >
             <AlignLeft size={16} />
           </button>
           <button
-            onClick={() => execCommand('justifyCenter')}
+            onClick={() => applyAlignment('center')}
             className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
             title="Centrer"
           >
             <AlignCenter size={16} />
           </button>
           <button
-            onClick={() => execCommand('justifyRight')}
+            onClick={() => applyAlignment('right')}
             className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
             title="Aligner à droite"
           >
